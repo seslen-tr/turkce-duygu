@@ -61,10 +61,12 @@ def cumlelere_bol(metin: str) -> list[str]:
 
 class Cozumleyici:
     def __init__(self, model_klasoru: str | None = None, model: bool | None = None,
-                 stiller: tuple[str, ...] = STILLER):
+                 stiller: tuple[str, ...] = STILLER, ayar: dict | None = None):
         """model=None: varsa yükle; True: zorunlu; False: yalnız kurallar.
-        stiller: seslendirecek sesin sahip olduğu stiller (olmayanlar en yakınına düşer)."""
+        stiller: seslendirecek sesin sahip olduğu stiller (olmayanlar en yakınına düşer).
+        ayar: stil.VARSAYILAN_AYAR anahtarlarını ezer (model klasöründeki ayarın da üstünde)."""
         self.stiller = stiller
+        self.ayar = ayar
         self.model = None
         if model is not False:
             try:
@@ -74,24 +76,26 @@ class Cozumleyici:
                 if model:
                     raise
 
-    def _gucler(self, cumleler: list[str]) -> tuple[list[dict | None], list[dict]]:
+    def _gucler(self, cumleler: list[str]) -> tuple[list[dict | None], list[dict], list[dict | None]]:
         if not self.model or not cumleler:
-            return [None] * len(cumleler), [{} for _ in cumleler]
-        p = self.model.olasiliklar(cumleler)
+            return [None] * len(cumleler), [{} for _ in cumleler], [None] * len(cumleler)
+        p, sp = self.model.tahmin(cumleler)
         g = self.model.guc(p)
         d = self.model.duygular
+        so = [dict(zip(self.model.stiller, map(float, r))) for r in sp] if sp is not None else [None] * len(cumleler)
         return ([dict(zip(d, map(float, r))) for r in g],
-                [dict(zip(d, (round(float(x), 4) for x in r))) for r in p])
+                [dict(zip(d, (round(float(x), 4) for x in r))) for r in p], so)
 
     def cozumle(self, cumle: str) -> Sonuc:
         return self.metin_cozumle(cumle, bol=False)[0]
 
     def metin_cozumle(self, metin: str, bol: bool = True, surekli: bool = True) -> list[Sonuc]:
         cumleler = cumlelere_bol(metin) if bol else [metin.strip()]
-        gucler, olas = self._gucler(cumleler)
+        gucler, olas, stil_olas = self._gucler(cumleler)
         eylemler: list[Eylem] = [eylem(c) for c in cumleler]
-        ayar = getattr(self.model, "stil_ayar", None)
-        stiller: list[Stil] = [stil_sec(c, e, g, self.stiller, ayar) for c, e, g in zip(cumleler, eylemler, gucler)]
+        ayar = {**(getattr(self.model, "stil_ayar", None) or {}), **(self.ayar or {})}
+        stiller: list[Stil] = [stil_sec(c, e, g, self.stiller, ayar, so)
+                               for c, e, g, so in zip(cumleler, eylemler, gucler, stil_olas)]
         if surekli:
             stiller = yumusat(stiller, gucler)
         return [Sonuc(c, e.tur, e.ipucu, s.stil, s.yogunluk, s.gerekce, o)

@@ -6,7 +6,8 @@ Stiller: nötr, neşeli, heyecan, uyarı, merak, özür, üzgün, kızgın, fıs
 (anlatıcı/stüdyo kararı); yalnız "fısıldadı" gibi açık söz geçerse önerilir. Sesin bir stili yoksa
 YEDEK'teki en yakın stile düşülür (ör. üzgün → özür).
 Önce biçim karar verir (soru → merak, özür kalıbı → özür, uyarı → uyarı; G&K ve H03'e dayanan
-eylem.py), biçimin söylemediği yerde duygu modeli. Duygu → stil eşlemesi aşağıda, değiştirilebilir.
+eylem.py), biçimin söylemediği yerde model: iki çıkışlı modelde stil başlığı (stil olasılıkları),
+yoksa duygu olasılıkları. Duygu → stil eşlemesi aşağıda, değiştirilebilir.
 Yoğunluk 0–1: stüdyoda duygu yoğunluğu sürgüsüne verilir.
 """
 from __future__ import annotations
@@ -32,8 +33,12 @@ EYLEM_STIL = {"ozur": ("ozur", 0.7), "uyari": ("uyari", 0.8), "yasak": ("uyari",
               "soru": ("merak", 0.6), "danisma": ("merak", 0.45), "rica": ("notr", 0.0)}
 # Stil ayarı (model klasöründeki esikler.json "stil" anahtarı ezer; degerlendirme/stil_ayar.py seçer):
 #   duyarlilik: duygu gücü çarpanı (büyükse daha az cümle nötr kalır)
-#   baskin: biçimi ezen duygu gücü — "Bunu bana nasıl yaparsın?" soru biçiminde ama öfkeliyse kızgın okunur
-VARSAYILAN_AYAR = {"duyarlilik": 1.0, "baskin": 1.5}
+#   baskin: biçimi ezen duygu gücü — "Bunu bana nasıl yaparsın?" soru biçiminde ama öfkeliyse kızgın okunur.
+#           Varsayılan kapalı: altyazıyla eğitilen duygu modeli düz soruların çoğunda da öfke görüyor
+#           (1.5'te havuz sınavında merak %89 → %18).
+#   stil_esik: stil başlığının nötr dışı bir stili seçmesi için gereken olasılık (altındaysa duygu gücüne bakılır)
+#   stil_baskin: biçimi ezen stil başlığı olasılığı (kızgın / üzgün)
+VARSAYILAN_AYAR = {"duyarlilik": 1.0, "baskin": float("inf"), "stil_esik": 0.3, "stil_baskin": 0.6}
 _PEKISTIRME = re.compile(r"\b(?:çok|mutlaka|kesinlikle|asla|hemen|derhal|sakın|gerçekten|son\s+derece|inanılmaz\w*)\b")
 
 
@@ -54,21 +59,28 @@ def _pekistir(cumle: str, taban: float) -> float:
 
 
 def stil_sec(cumle: str, e: Eylem, guc: dict[str, float] | None, mevcut: tuple[str, ...] = STILLER,
-             ayar: dict | None = None) -> Stil:
+             ayar: dict | None = None, stil_olas: dict[str, float] | None = None) -> Stil:
     """guc: duygu başına (olasılık / eşik) / nötr eşiği; >1 ise o duygu belirgin. None: model yok.
-    mevcut: sesin sahip olduğu stiller; olmayan stil YEDEK'e düşer."""
+    mevcut: sesin sahip olduğu stiller; olmayan stil YEDEK'e düşer.
+    stil_olas: iki çıkışlı modelin stil olasılıkları (yoksa None)."""
     a = {**VARSAYILAN_AYAR, **(ayar or {})}
     if guc:
         guc = {d: g * a["duyarlilik"] for d, g in guc.items()}
-    s = _stil_sec(cumle, e, guc, a["baskin"])
+    s = _stil_sec(cumle, e, guc, a["baskin"], stil_olas, a["stil_esik"], a["stil_baskin"])
     while s.stil not in mevcut and s.stil in YEDEK:
         s = Stil(YEDEK[s.stil], s.yogunluk if YEDEK[s.stil] != "notr" else 0.0, s.gerekce + f" (yedek: {s.stil}→{YEDEK[s.stil]})")
     return s
 
 
-def _stil_sec(cumle: str, e: Eylem, guc: dict[str, float] | None, baskin: float = 1.5) -> Stil:
+def _stil_sec(cumle: str, e: Eylem, guc: dict[str, float] | None, baskin: float = float("inf"),
+              so: dict[str, float] | None = None, stil_esik: float = 0.3, stil_baskin: float = 0.6) -> Stil:
     if _FISILTI.search(kucuk(cumle)):
         return Stil("fisilti", 0.6, "fısıltı sözü")
+    if so and e.tur in ("soru", "danisma", "emir", "yasak", "uyari", "unlem"):
+        s = max(("kizgin", "uzgun"), key=lambda x: so.get(x, 0.0))
+        if so.get(s, 0.0) >= stil_baskin and (s == "kizgin" or e.tur in ("soru", "danisma")):
+            return Stil(s, _pekistir(cumle, float(np.clip(0.4 + (so[s] - stil_baskin), 0.4, 0.9))),
+                        f"stil modeli: {s} ({so[s]:.2f}) biçimi ({e.tur}) ezdi")
     if guc and e.tur in ("soru", "danisma", "emir", "yasak", "uyari", "unlem"):
         # Güçlü duygu biçimi ezer: öfkeli soru / emir → kızgın, hüzünlü soru → üzgün
         ofke = max(guc.get("ofke", 0.0), guc.get("tiksinti", 0.0))
@@ -85,7 +97,11 @@ def _stil_sec(cumle: str, e: Eylem, guc: dict[str, float] | None, baskin: float 
         return Stil(s, _pekistir(cumle, y) if y else 0.0, f"eylem: {e.tur} ({', '.join(e.ipucu)})")
     if e.unlem in UNLEM_STIL:
         return Stil(UNLEM_STIL[e.unlem], _pekistir(cumle, 0.6), f"ünlem: {e.unlem}")
-    if guc:
+    if so:
+        s, p = max(so.items(), key=lambda x: x[1])
+        if s != "notr" and p >= stil_esik:
+            return Stil(s, _pekistir(cumle, float(np.clip(0.3 + (p - stil_esik), 0.3, 0.85))), f"stil modeli: {s} ({p:.2f})")
+    if guc and not (so and max(so, key=so.get) == "notr"):
         stil_guc: dict[str, float] = {}
         for d, g in guc.items():
             s = DUYGU_STIL[d]

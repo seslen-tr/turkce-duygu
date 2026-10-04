@@ -1,7 +1,7 @@
 # turkce-duygu
 
-Türkçe metinden **seslendirme stili** seçer: her cümle için nötr, neşeli, heyecan, uyarı, merak
-ya da özür tonunu ve bir yoğunluk değerini (0–1) verir. GPU ve internet gerekmez.
+Türkçe metinden **seslendirme stili** seçer: her cümle için nötr, neşeli, heyecan, uyarı, merak,
+özür, üzgün, kızgın ya da fısıltı tonunu ve bir yoğunluk değerini (0–1) verir. GPU ve internet gerekmez.
 
 ```python
 from turkce_duygu import metin_cozumle
@@ -49,15 +49,23 @@ Emir ve istek biçimleri 1.806 eylem gövdesinden üretilir. Türetilmiş gövde
 kullan-ıl-masın) ve ünsüz yumuşaması (git → gidin) de tanınır. "Affedersiniz, istasyon ne tarafta?"
 özür değil, dikkat çekme sözüdür. "Dikkatini çekti" uyarı değildir.
 
-**2. Duygu (model, `model.py`).** BERTurk ([dbmdz/bert-base-turkish-cased](https://huggingface.co/dbmdz/bert-base-turkish-cased)),
-[XED](https://github.com/Helsinki-NLP/XED) Türkçe verisiyle Plutchik'in 8 temel duygusuna ince
-ayarlandı: öfke, beklenti, tiksinti, korku, sevinç, üzüntü, şaşkınlık, güven. ONNX int8 olarak
-işlemcide çalışır.
+**2. Model (`model.py`).** BERTurk ([dbmdz/bert-base-turkish-cased](https://huggingface.co/dbmdz/bert-base-turkish-cased)),
+iki çıkışlı. ONNX olarak işlemcide çalışır.
+
+- **Duygu çıkışı:** [XED](https://github.com/Helsinki-NLP/XED) Türkçe verisiyle Plutchik'in 8 temel
+  duygusu (öfke, beklenti, tiksinti, korku, sevinç, üzüntü, şaşkınlık, güven).
+- **Stil çıkışı** (`egit/egit_stil.py`): 8 seslendirme stilinin olasılığı. Bu proje için yazılmış açık
+  stil setiyle (`turkce_duygu/veri/stil_seti`, 908 cümle, CC0; sentetik: bir dil modeli yardımıyla
+  yazıldı), nötr örneklerle ve duygudan eşlenmiş
+  XED cümleleriyle (düşük ağırlıkla) eğitildi.
 
 **3. Stil (`stil.py`).** Önce biçim karar verir: soru → merak, özür → özür, uyarı/yasak → uyarı,
-emir → hafif uyarı, rica → nötr. Biçimin söylemediği yerde duygu: sevinç/güven → neşeli,
-şaşkınlık/beklenti → heyecan, korku/öfke/tiksinti → uyarı, üzüntü → özür. Hiçbir duygu eşiği
-geçmezse nötr. Ünlem işareti ve pekiştirme sözcükleri (çok, mutlaka, kesinlikle, hemen) yoğunluğu
+emir → hafif uyarı, rica → nötr. Biçimin söylemediği yerde modelin stil çıkışı karar verir. Stil
+çıkışı yoksa (eski tek çıkışlı model) duygu eşlemesi kullanılır: sevinç/güven → neşeli,
+şaşkınlık/beklenti → heyecan, korku → uyarı, öfke/tiksinti → kızgın, üzüntü → üzgün. Hiçbir duygu
+eşiği geçmezse nötr. Çok güçlü öfke ya da üzüntü biçimi ezer: "Kaç kere söyleyeceğim sana, kapıyı
+kapat!" emir biçimindedir ama kızgın okunur. Fısıltı metinden seçilmez; yalnız "fısıldadı" gibi açık bir söz geçerse önerilir. Sesin bir
+stili yoksa en yakınına düşülür (üzgün → özür, kızgın → uyarı). Ünlem işareti ve pekiştirme sözcükleri (çok, mutlaka, kesinlikle, hemen) yoğunluğu
 artırır. Paragrafta, duygulu bir cümlenin ardındaki eşiğe yakın cümle tonu yarı yoğunlukla sürdürür.
 Eşleme tablo hâlinde durur, değiştirilebilir.
 
@@ -79,27 +87,39 @@ Eşleme tablo hâlinde durur, değiştirilebilir.
 - **ONNX:** int8 sıkıştırma kalite kapısını geçmedi (makro-F1 −0,026), model fp32 yayımlanır (443 MB).
   Tek cümle 13 ms, PyTorch ile birebir aynı.
 
-**Seslendirme stili (kurallar + model).** Seslen ses atölyesinin ton havuzlarında ölçüldü: kurallar
-yalnız ilk yarılara bakılarak geliştirildi, sayılar hiç incelenmeyen ikinci yarılardan. Havuzlar
-yayımlanmıyor; betik `degerlendirme/stil_havuz.py`.
+**Seslendirme stili (kurallar + model).** Seslen ses atölyesinin ton havuzlarında ölçüldü. Kurallar
+ve eşikler yalnız ilk yarılara bakılarak seçildi; sayılar hiç incelenmeyen ikinci yarılardan (2.209
+cümle). Havuzlar yayımlanmıyor; betik `degerlendirme/stil_havuz.py`.
 
-| Ton | Doğru | En sık karıştığı |
-|---|---|---|
-| uyarı | %92,6 | kızgın |
-| merak | %88,9 | heyecan |
-| özür | %84,6 | üzgün |
-| nötr | %84,3 | heyecan |
-| heyecan | %43,4 | neşeli |
-| kızgın | %37,7 | merak (öfkeli soru), uyarı (öfkeli emir) |
-| üzgün | %33,7 | nötr |
-| neşeli | %29,7 | nötr |
+| Ton | Stil çıkışıyla | Yalnız duygu çıkışıyla | En sık karıştığı (stil çıkışıyla) |
+|---|---|---|---|
+| uyarı | **%94,9** | %92,6 | kızgın |
+| nötr | **%90,1** | %84,3 | üzgün, neşeli |
+| özür | **%88,0** | %84,6 | üzgün |
+| heyecan | **%87,7** | %43,4 | neşeli |
+| merak | %84,0 | **%88,9** | kızgın (öfkeli soru) |
+| neşeli | **%81,7** | %29,7 | nötr |
+| üzgün | **%78,8** | %33,7 | nötr |
+| kızgın | **%72,1** | %37,7 | merak, uyarı |
+| **toplam** | **%85,6** | %63,8 | |
 
-Biçimle taşınan tonlar (soru, uyarı, özür) güvenilirdir. Yalnız duyguyla taşınanlar (neşe, üzüntü,
-öfke) zayıftır; altyazı verisiyle eğitilen model yazılı cümlelerdeki sakin duyguyu çoğu zaman nötr
-bulur. Yanılgılar çoğunlukla komşu tona (neşeli ↔ heyecan) ya da nötre düşer. Seslendirmede bu,
-yanlış duygudan daha zararsızdır. Biçimi ezen güçlü duygu kuralı (`baskin`) ve duyarlılık ayarı
-denendi (`degerlendirme/stil_ayar.py`). Geliştirme yarısında seçilen ayar sınavda toplamı yalnız %63,8'den
-%64,1'e çıkardı, nötr doğruluğunu %84'ten %72'ye düşürdü; varsayılan olarak kapalıdır.
+Biçimle taşınan tonlar (soru, uyarı, özür) iki yolda da güvenilirdir. Yalnız duyguyla taşınan tonlar
+(neşe, heyecan, üzüntü, öfke) duygu çıkışıyla zayıf kalıyordu: altyazıyla eğitilen model yazılı
+cümlelerdeki sakin duyguyu çoğu zaman nötr bulur. Stil çıkışı bu açığı kapatır. Yanılgılar çoğunlukla
+komşu tona (neşeli ↔ heyecan, kızgın ↔ uyarı) ya da nötre düşer. Seslendirmede bu, yanlış duygudan
+daha zararsızdır.
+
+**Bu sayıları okurken:**
+
+- Stil seti ile havuz cümleleri aynı türdendir: ikisi de seslendirme için yazılmış kısa örnek
+  cümlelerdir. Bu yüzden sonuçlar gerçek kullanıcı metninde muhtemelen daha düşüktür.
+- Üzgün ve kızgın havuzlarıyla birebir ya da çok benzer olan stil seti cümleleri eğitimden önce
+  ayıklandı (`degerlendirme/sizinti_temizle.py`). Yine de bu iki tonun sınavı ötekiler kadar
+  bağımsız değildir.
+- Biçimi ezen duygu kuralı (`baskin`) duygu çıkışıyla varsayılan olarak kapalıdır. Altyazıyla
+  eğitilen model düz soruların çoğunda da öfke görüyor: kural 1,5'te açıkken merak %89'dan %18'e
+  düşüyor. Stil çıkışıyla aynı iş `stil_baskin` ile yapılır (varsayılan 0,6). Eşikler
+  `Cozumleyici(ayar={...})` ile değiştirilebilir.
 
 ## Kurulum
 
@@ -116,7 +136,8 @@ Model dosyaları (duygu.onnx, tokenizer.json, esikler.json; ~110 MB) Hugging Fac
 pip install turkce-duygu[egitim]
 python egit/veri.py        # XED (sabit sürüm) + Vikipedi nötr örnekleri, MD5'e göre bölme
 python egit/egit.py        # BERTurk ince ayar; en iyi tur doğrulama makro-F1'ine göre
-python egit/aktar.py       # ONNX int8 + eşdeğerlik kapısı
+python egit/aktar.py       # ONNX + eşdeğerlik kapısı (int8 kapıyı geçmezse fp32)
+python egit/egit_stil.py   # stil çıkışını ekler (iki çıkışlı ONNX)
 python degerlendirme/olc.py
 ```
 
@@ -142,7 +163,8 @@ python degerlendirme/olc.py
 
 ## Lisans
 
-Kod MIT ([LICENSE](LICENSE)). Model ağırlıkları XED'den türediği için **CC BY 4.0** (atıf:
+Kod MIT ([LICENSE](LICENSE)). Stil seti (`turkce_duygu/veri/stil_seti`) CC0: cümleler bu proje için bir dil modeli
+yardımıyla yazıldı (sentetik), gerçek kişilere ya da yayımlanmış metinlere dayanmaz. Model ağırlıkları XED'den türediği için **CC BY 4.0** (atıf:
 Öhman vd. 2020). `turkce_duygu/veri/fiiller.txt` Vikisözlük türevidir (CC BY-SA 4.0).
 
 Kardeş projeler: [turkce-vurgu](../turkce-vurgu) (vurgulu okunuş), [turkce-normalize](../turkce-normalize)

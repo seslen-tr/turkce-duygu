@@ -2,6 +2,7 @@
 """
 DUYGU MODELİ — ince ayarlı BERTurk'ün ONNX (int8) sürümünü işlemcide çalıştırır.
 
+İki çıkışlı modelde (egit/egit_stil.py) ikinci çıkış 8 seslendirme stilinin olasılıklarıdır.
 Model klasörü (öncelik sırasıyla): DuyguModeli(klasor), TURKCE_DUYGU_MODEL ortam değişkeni,
 paketin yanındaki model/, depo kökündeki model/onnx/. İçinde: duygu.onnx, tokenizer.json, esikler.json.
 Gereken: onnxruntime, tokenizers (torch gerekmez).
@@ -55,17 +56,27 @@ class DuyguModeli:
             se.intra_op_num_threads = is_parcacigi
         self.oturum = ort.InferenceSession(str(k / "duygu.onnx"), se, providers=["CPUExecutionProvider"])
         self._girdiler = {g.name for g in self.oturum.get_inputs()}
+        cikis = [o.name for o in self.oturum.get_outputs()]
+        self.stiller: list[str] | None = ayar.get("stiller") if "stil_logits" in cikis else None
 
-    def olasiliklar(self, cumleler: list[str]) -> np.ndarray:
-        """(n, 8) sigmoid olasılıkları, self.duygular sırasıyla."""
+    def tahmin(self, cumleler: list[str]) -> tuple[np.ndarray, np.ndarray | None]:
+        """(duygu olasılıkları (n, 8) sigmoid, stil olasılıkları (n, 8) softmax ya da None)."""
         if not cumleler:
-            return np.zeros((0, len(self.duygular)), dtype=np.float32)
+            return np.zeros((0, len(self.duygular)), dtype=np.float32), None
         kod = self.tok.encode_batch([hazirla(c) for c in cumleler])
         g = {"input_ids": np.array([e.ids for e in kod], dtype=np.int64),
              "attention_mask": np.array([e.attention_mask for e in kod], dtype=np.int64),
              "token_type_ids": np.array([e.type_ids for e in kod], dtype=np.int64)}
-        logit = self.oturum.run(None, {k: v for k, v in g.items() if k in self._girdiler})[0]
-        return 1 / (1 + np.exp(-logit))
+        cikti = self.oturum.run(None, {k: v for k, v in g.items() if k in self._girdiler})
+        d = 1 / (1 + np.exp(-cikti[0]))
+        if not self.stiller:
+            return d, None
+        s = np.exp(cikti[1] - cikti[1].max(1, keepdims=True))
+        return d, s / s.sum(1, keepdims=True)
+
+    def olasiliklar(self, cumleler: list[str]) -> np.ndarray:
+        """(n, 8) sigmoid olasılıkları, self.duygular sırasıyla."""
+        return self.tahmin(cumleler)[0]
 
     def guc(self, p: np.ndarray) -> np.ndarray:
         """Olasılığın kendi eşiğine oranı, nötr eşiğiyle ölçeklenmiş: >1 ise duygu var sayılır."""
