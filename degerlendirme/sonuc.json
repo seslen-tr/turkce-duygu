@@ -1,0 +1,47 @@
+{
+ "sinav_cumle": 904,
+ "siklik": {
+  "makro_f1": 0.2253,
+  "ilk_dogru": 0.2024,
+  "duygu_f1": {
+   "ofke": 0.3367,
+   "bekleyis": 0.217,
+   "tiksinti": 0.0928,
+   "korku": 0.2632,
+   "sevinc": 0.1902,
+   "uzuntu": 0.2099,
+   "saskinlik": 0.2046,
+   "guven": 0.2879
+  }
+ },
+ "tfidf_lr": {
+  "makro_f1": 0.2889,
+  "ilk_dogru": 0.2876,
+  "duygu_f1": {
+   "ofke": 0.418,
+   "bekleyis": 0.3301,
+   "tiksinti": 0.0377,
+   "korku": 0.2877,
+   "sevinc": 0.3317,
+   "uzuntu": 0.3,
+   "saskinlik": 0.2735,
+   "guven": 0.3324
+  }
+ },
+ "berturk_onnx_int8": {
+  "makro_f1": 0.3266,
+  "ilk_dogru": 0.3584,
+  "duygu_f1": {
+   "ofke": 0.4552,
+   "bekleyis": 0.3372,
+   "tiksinti": 0.1443,
+   "korku": 0.3501,
+   "sevinc": 0.3777,
+   "uzuntu": 0.3363,
+   "saskinlik": 0.2577,
+   "guven": 0.3545
+  }
+ },
+ "vikipedi_notr": 0.9509,
+ "xed_duygulu": 0.9823
+}

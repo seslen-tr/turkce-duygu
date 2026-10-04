@@ -1,0 +1,27 @@
+# Ünlemler ve duygu grupları. Tanımlar TDK Güncel Türkçe Sözlük (sozluk.gov.tr) ve Göksel & Kerslake 2005 §7.1.5.
+# konum: "bas" = yalnız cümle başında ve ardından noktalama (ay, of gibi eşsesli sözcükler için); "her" = her yerde.
+# ünlem	grup	konum	tanım (kısaltılmış)
+yaşasın	sevinc	her	TDK: yaşa, kahrolsun karşıtı
+oley	sevinc	her	TDK: yaşa
+oh	sevinc	bas	TDK: sevinç, beğenme, hayranlık, rahatlama
+oh be	sevinc	her	oh + be (rahatlama)
+hah	sevinc	bas	TDK: beklenen bir şey olur olmaz duyulan sevinç ve onama
+aferin	sevinc	her	TDK: övme, takdir, beğenme
+bravo	sevinc	her	TDK: aferin, yaşa; beğeni
+maşallah	sevinc	her	TDK: ne güzel, Allah nazardan saklasın; beğenme
+vay	saskinlik	bas	TDK: şaşma anlatan söz
+hayret	saskinlik	bas	TDK: şaşılan bir şey karşısında söylenen söz
+allah allah	saskinlik	her	G&K §7.1.5: good heavens!
+hay allah	uzuntu	her	G&K §7.1.5: oh dear!
+eyvah	uzuntu	her	TDK: beklenmedik, kötü haber karşısında acınma, üzülme, telaş
+tüh	uzuntu	bas	TDK: vah vah anlamında pişmanlık
+vah vah	uzuntu	her	TDK: çok yazık; G&K §7.1.5: what a shame!
+vah	uzuntu	bas	TDK: yazık
+yazık	uzuntu	bas	TDK: acınma, üzüntü
+of	sikinti	bas	TDK: sıkıntı, bezginlik, usanç, acı, yorgunluk
+öf	sikinti	bas	TDK: usanç, bezginlik, tiksinti
+üf	sikinti	bas	TDK: usanç, bezginlik, tiksinti
+yuh	sikinti	bas	TDK: beğenilmeyen ya da öfke duyulan durumda haykırılan söz
+imdat	korku	her	TDK: yetişin, kurtarın
+aman	korku	bas	TDK: yardım istenildiğini anlatan söz
+ay	saskinlik	bas	TDK: birdenbire duyulan acı, ağrı, şaşırma, ürkme ya da sevinç

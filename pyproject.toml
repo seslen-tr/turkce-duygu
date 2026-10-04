@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "turkce-duygu"
+version = "0.1.0"
+description = "Türkçe metinden seslendirme stili: kurallı konuşma eylemi (soru, rica, uyarı, özür) + BERTurk duygu modeli, GPU'suz"
+readme = "README.md"
+license = { text = "MIT (kod); CC BY 4.0 (model: XED türevi); CC BY-SA 4.0 (veri/fiiller.txt)" }
+authors = [{ name = "Mehmet Veysel Delibaş" }]
+requires-python = ">=3.9"
+dependencies = ["numpy"]
+
+[project.optional-dependencies]
+model = ["onnxruntime>=1.16", "tokenizers>=0.15"]
+egitim = ["torch", "transformers>=4.40", "scikit-learn", "pyarrow", "huggingface_hub", "onnx"]
+
+[tool.setuptools.packages.find]
+include = ["turkce_duygu*"]
+
+[tool.setuptools.package-data]
+turkce_duygu = ["veri/*.txt", "veri/*.tsv"]

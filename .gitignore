@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+/model/
+/veri/
+.venv/
+egit.log
+egit.err
+*.egg-info/
