@@ -15,7 +15,7 @@ from pathlib import Path
 
 KOK = Path(__file__).resolve().parents[1]
 SET = KOK / "turkce_duygu" / "veri" / "stil_seti"
-HAVUZ = Path(os.environ.get("TURKCE_DUYGU_HAVUZ", Path.home() / "Desktop/gis-platform/sesatolye/veri/duygu"))
+HAVUZ = Path(os.environ.get("TURKCE_DUYGU_HAVUZ", Path.home() / "Desktop/gis-platform/seslen/veri/duygu"))
 ESIK = 0.5
 
 

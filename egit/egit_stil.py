@@ -39,7 +39,7 @@ from turkce_duygu.model import hazirla  # noqa: E402
 STILLER = ("notr", "neseli", "heyecan", "uyari", "merak", "ozur", "uzgun", "kizgin")
 ESLEME = {"sevinc": "neseli", "guven": "neseli", "saskinlik": "heyecan", "bekleyis": "heyecan",
           "ofke": "kizgin", "tiksinti": "kizgin", "uzuntu": "uzgun", "korku": "uyari"}
-HAVUZ = Path(os.environ.get("TURKCE_DUYGU_HAVUZ", Path.home() / "Desktop/gis-platform/sesatolye/veri/duygu"))
+HAVUZ = Path(os.environ.get("TURKCE_DUYGU_HAVUZ", Path.home() / "Desktop/gis-platform/seslen/veri/duygu"))
 UZUNLUK = 64
 
 

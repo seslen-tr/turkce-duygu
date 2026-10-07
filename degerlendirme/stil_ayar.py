@@ -22,7 +22,7 @@ from turkce_duygu import Cozumleyici  # noqa: E402
 from turkce_duygu.eylem import eylem  # noqa: E402
 from turkce_duygu.stil import stil_sec  # noqa: E402
 
-HAVUZ = Path(os.environ.get("TURKCE_DUYGU_HAVUZ", Path.home() / "Desktop/gis-platform/sesatolye/veri/duygu"))
+HAVUZ = Path(os.environ.get("TURKCE_DUYGU_HAVUZ", Path.home() / "Desktop/gis-platform/seslen/veri/duygu"))
 STILLER = ["neseli", "heyecan", "uyari", "merak", "ozur", "uzgun", "kizgin"]
 
 
