@@ -14,7 +14,7 @@ import tempfile
 from pathlib import Path
 
 KOK = Path(__file__).resolve().parents[1]
-DEPO = os.environ.get("TURKCE_DUYGU_HF", "mveyseldelibas/turkce-duygu")
+DEPO = os.environ.get("TURKCE_DUYGU_HF", "seslen-tr/turkce-duygu")
 DOSYALAR = {'model/onnx/duygu.onnx': 'duygu.onnx', 'model/onnx/tokenizer.json': 'tokenizer.json', 'model/onnx/esikler.json': 'esikler.json'}            # yerel yol (proje köküne göre) → depodaki yol
 
 

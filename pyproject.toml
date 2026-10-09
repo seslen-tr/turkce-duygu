@@ -12,6 +12,11 @@ authors = [{ name = "Mehmet Veysel Delibaş" }]
 requires-python = ">=3.9"
 dependencies = ["numpy"]
 
+[project.urls]
+Homepage = "https://github.com/seslen-tr/turkce-duygu"
+Source = "https://github.com/seslen-tr/turkce-duygu"
+Issues = "https://github.com/seslen-tr/turkce-duygu/issues"
+
 [project.optional-dependencies]
 model = ["onnxruntime>=1.16", "tokenizers>=0.15", "huggingface_hub>=0.20"]
 egitim = ["torch", "transformers>=4.40", "scikit-learn", "pyarrow", "huggingface_hub", "onnx"]

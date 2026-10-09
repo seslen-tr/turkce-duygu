@@ -85,7 +85,7 @@ Eşleme tablo hâlinde durur, değiştirilebilir.
 - Doğrulamada makro-F1 0,390'dı; aradaki fark, eşiklerin doğrulama kümesine uymasından gelir.
 - **Nötr ayrımı:** sınav kümesindeki nötr cümlelerin (Vikipedi + Common Voice) %95,1'i nötr, XED
   cümlelerinin %98,2'si duygulu bulunur. Nötr ve duygulu örnekler farklı kaynaklardan geldiği için bu
-  oranın bir kısmı üslup farkından gelir; üslubu ayrı ölçmek için [turkce-uslup](../turkce-uslup).
+  oranın bir kısmı üslup farkından gelir; üslubu ayrı ölçmek için [turkce-uslup](https://github.com/seslen-tr/turkce-uslup).
 - **ONNX:** int8 sıkıştırma kalite kapısını geçmedi (makro-F1 −0,026), model fp32 yayımlanır (443 MB).
   Tek cümle 13 ms, PyTorch ile birebir aynı.
 
@@ -169,5 +169,5 @@ Kod MIT ([LICENSE](LICENSE)). Stil seti (`turkce_duygu/veri/stil_seti`) CC0: cü
 yardımıyla yazıldı (sentetik), gerçek kişilere ya da yayımlanmış metinlere dayanmaz. Model ağırlıkları XED'den türediği için **CC BY 4.0** (atıf:
 Öhman vd. 2020). `turkce_duygu/veri/fiiller.txt` Vikisözlük türevidir (CC BY-SA 4.0).
 
-Kardeş projeler: [turkce-vurgu](../turkce-vurgu) (vurgulu okunuş), [turkce-normalize](../turkce-normalize)
-(metin hazırlama), [turkce-plbert](../turkce-plbert), [turkce-tts-sinav](../turkce-tts-sinav).
+Kardeş projeler: [turkce-vurgu](https://github.com/seslen-tr/turkce-vurgu) (vurgulu okunuş), [turkce-normalize](https://github.com/seslen-tr/turkce-normalize)
+(metin hazırlama), [turkce-plbert](https://github.com/seslen-tr/turkce-plbert), [turkce-tts-sinav](https://github.com/seslen-tr/turkce-tts-sinav).

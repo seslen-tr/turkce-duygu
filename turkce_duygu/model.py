@@ -18,7 +18,7 @@ from pathlib import Path
 import numpy as np
 
 _PAKET = Path(__file__).resolve().parent
-HF_DEPO = os.environ.get("TURKCE_DUYGU_HF", "mveyseldelibas/turkce-duygu")
+HF_DEPO = os.environ.get("TURKCE_DUYGU_HF", "seslen-tr/turkce-duygu")
 DOSYALAR = ["duygu.onnx", "tokenizer.json", "esikler.json"]
 
 
