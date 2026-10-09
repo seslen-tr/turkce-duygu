@@ -13,7 +13,7 @@ requires-python = ">=3.9"
 dependencies = ["numpy"]
 
 [project.optional-dependencies]
-model = ["onnxruntime>=1.16", "tokenizers>=0.15"]
+model = ["onnxruntime>=1.16", "tokenizers>=0.15", "huggingface_hub>=0.20"]
 egitim = ["torch", "transformers>=4.40", "scikit-learn", "pyarrow", "huggingface_hub", "onnx"]
 
 [tool.setuptools.packages.find]

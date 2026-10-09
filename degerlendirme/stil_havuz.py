@@ -18,7 +18,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from turkce_duygu import Cozumleyici  # noqa: E402
 
-HAVUZ = Path(os.environ.get("TURKCE_DUYGU_HAVUZ", Path.home() / "Desktop/gis-platform/seslen/veri/duygu"))
+HAVUZ = Path(os.environ.get("TURKCE_DUYGU_HAVUZ", Path(__file__).resolve().parents[1] / "veri" / "havuz"))
 STILLER = ["neseli", "heyecan", "uyari", "merak", "ozur", "uzgun", "kizgin"]
 
 

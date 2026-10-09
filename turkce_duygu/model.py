@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-DUYGU MODELİ — ince ayarlı BERTurk'ün ONNX (int8) sürümünü işlemcide çalıştırır.
+DUYGU MODELİ — ince ayarlı BERTurk'ün ONNX sürümünü (fp32; int8 kalite kapısını geçmedi) işlemcide çalıştırır.
 
 İki çıkışlı modelde (egit/egit_stil.py) ikinci çıkış 8 seslendirme stilinin olasılıklarıdır.
 Model klasörü (öncelik sırasıyla): DuyguModeli(klasor), TURKCE_DUYGU_MODEL ortam değişkeni,
-paketin yanındaki model/, depo kökündeki model/onnx/. İçinde: duygu.onnx, tokenizer.json, esikler.json.
-Gereken: onnxruntime, tokenizers (torch gerekmez).
+paketin yanındaki model/, depo kökündeki model/onnx/, en son Hugging Face (TURKCE_DUYGU_HF deposu; ilk kullanımda
+indirilir, önbellekte kalır; TURKCE_DUYGU_INDIRME=0 ya da HF_HUB_OFFLINE=1 ile kapalı).
+İçinde: duygu.onnx, tokenizer.json, esikler.json. Gereken: pip install "turkce-duygu[model]" (torch gerekmez).
 """
 from __future__ import annotations
 
@@ -17,6 +18,19 @@ from pathlib import Path
 import numpy as np
 
 _PAKET = Path(__file__).resolve().parent
+HF_DEPO = os.environ.get("TURKCE_DUYGU_HF", "mveyseldelibas/turkce-duygu")
+DOSYALAR = ["duygu.onnx", "tokenizer.json", "esikler.json"]
+
+
+def _hf_indir() -> Path | None:
+    """Model yerelde yoksa Hugging Face'ten (yalnız gereken dosyalar). Kurulu değilse ya da kapalıysa None."""
+    if os.environ.get("TURKCE_DUYGU_INDIRME") == "0":
+        return None
+    try:
+        from huggingface_hub import snapshot_download
+        return Path(snapshot_download(HF_DEPO, allow_patterns=DOSYALAR))
+    except Exception:           # kütüphane yok, ağ yok, depo yok: çağıran anlaşılır hata verir
+        return None
 
 
 def hazirla(metin: str) -> str:
@@ -32,8 +46,11 @@ def _klasor(klasor: str | Path | None) -> Path:
     for a in adaylar:
         if (a / "duygu.onnx").exists():
             return a
-    raise FileNotFoundError("duygu modeli bulunamadı; TURKCE_DUYGU_MODEL ile klasörü gösterin "
-                            "(duygu.onnx, tokenizer.json, esikler.json). Aranan: " + ", ".join(map(str, adaylar)))
+    if (a := _hf_indir()) is not None and (a / "duygu.onnx").exists():
+        return a
+    raise FileNotFoundError(f"duygu modeli bulunamadı. pip install \"turkce-duygu[model]\" ile Hugging Face'ten "
+                            f"({HF_DEPO}) iner ya da TURKCE_DUYGU_MODEL ile klasörü gösterin (duygu.onnx, tokenizer.json, "
+                            "esikler.json). Aranan: " + ", ".join(map(str, adaylar)))
 
 
 class DuyguModeli:

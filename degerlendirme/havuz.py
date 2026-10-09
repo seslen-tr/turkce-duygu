@@ -17,7 +17,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from turkce_duygu.eylem import eylem  # noqa: E402
 
-HAVUZ = Path(os.environ.get("TURKCE_DUYGU_HAVUZ", Path.home() / "Desktop/gis-platform/seslen/veri/duygu"))
+HAVUZ = Path(os.environ.get("TURKCE_DUYGU_HAVUZ", Path(__file__).resolve().parents[1] / "veri" / "havuz"))
 BEKLENEN = {"merak": {"soru", "danisma"}, "uyari": {"uyari", "yasak"}, "ozur": {"ozur"}}
 
 
