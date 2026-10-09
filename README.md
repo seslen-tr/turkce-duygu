@@ -129,8 +129,8 @@ daha zararsızdır.
 pip install turkce-duygu[model]
 ```
 
-Model dosyaları (duygu.onnx, tokenizer.json, esikler.json; ~110 MB) Hugging Face'te yayımlanır.
-`TURKCE_DUYGU_MODEL` ortam değişkeniyle klasör gösterilir. Model yoksa paket yalnız kurallarla
+Model dosyaları (duygu.onnx, tokenizer.json, esikler.json; ~445 MB) Hugging Face'te yayımlanır ve ilk
+kullanımda kendiliğinden iner (önbellekte kalır). `TURKCE_DUYGU_MODEL` ortam değişkeniyle yerel klasör gösterilir. Model yoksa paket yalnız kurallarla
 çalışır.
 
 **Yeniden eğitmek** (GPU gerekmez, işlemcide yaklaşık bir saat):
