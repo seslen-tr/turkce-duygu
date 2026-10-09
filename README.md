@@ -1,5 +1,7 @@
 # turkce-duygu
 
+> **English:** Picks a speaking style for each Turkish sentence for expressive TTS: neutral, cheerful, excited, warning, curious, apologetic, sad, angry or whisper, with an intensity (0–1). Combines rule-based speech-act detection (question, request, warning, apology) with a fine-tuned BERTurk emotion model (ONNX, CPU only; downloaded from Hugging Face on first use).
+
 Türkçe metinden **seslendirme stili** seçer: her cümle için nötr, neşeli, heyecan, uyarı, merak,
 özür, üzgün, kızgın ya da fısıltı tonunu ve bir yoğunluk değerini (0–1) verir. GPU ve internet gerekmez.
 

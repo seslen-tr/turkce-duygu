@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "Bu yazılımı kullanırsanız lütfen atıf yapın. / If you use this software, please cite it."
+title: "turkce-duygu: Speaking style from Turkish text"
+authors:
+  - family-names: "Delibaş"
+    given-names: "Mehmet Veysel"
+license: MIT
+version: 0.1.0
+keywords: [turkish, tts, speech-synthesis, nlp]
