@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=64"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,7 +7,8 @@ name = "turkce-duygu"
 version = "0.1.0"
 description = "Türkçe metinden seslendirme stili: kurallı konuşma eylemi (soru, rica, uyarı, özür) + BERTurk duygu modeli, GPU'suz"
 readme = "README.md"
-license = { text = "MIT (kod); CC BY 4.0 (model: XED türevi); CC BY-SA 4.0 (veri/fiiller.txt)" }
+license = "MIT AND CC-BY-SA-4.0"
+license-files = ["LICENSE"]
 authors = [{ name = "Mehmet Veysel Delibaş" }]
 requires-python = ">=3.9"
 dependencies = ["numpy"]
