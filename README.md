@@ -3,7 +3,8 @@
 > **English:** Picks a speaking style for each Turkish sentence for expressive TTS: neutral, cheerful, excited, warning, curious, apologetic, sad, angry or whisper, with an intensity (0–1). Combines rule-based speech-act detection (question, request, warning, apology) with a fine-tuned BERTurk emotion model (ONNX, CPU only; downloaded from Hugging Face on first use).
 
 Türkçe metinden **seslendirme stili** seçer: her cümle için nötr, neşeli, heyecan, uyarı, merak,
-özür, üzgün, kızgın ya da fısıltı tonunu ve bir yoğunluk değerini (0–1) verir. GPU ve internet gerekmez.
+özür, üzgün, kızgın ya da fısıltı tonunu ve bir yoğunluk değerini (0–1) verir. GPU gerekmez; internet
+yalnız modelin ilk indirilişinde gerekir (model olmadan paket yalnız kurallarla çalışır).
 
 ```python
 from turkce_duygu import metin_cozumle
@@ -15,6 +16,30 @@ for r in metin_cozumle("Günaydın! Bugün hava harika. Şemsiyeni unutma, öğl
 
 ```
 python -m turkce_duygu "Eyvah, anahtarı evde unuttum. Kapıyı açabilir misiniz?"
+```
+
+Komut satırı her cümle için stil, yoğunluk, eylem, gerekçe ve en olası duyguyu yazar; metin verilmezse
+standart girdiden okur.
+
+### API
+
+- `cozumle(cumle)` → tek cümle için `Sonuc`; `metin_cozumle(metin, surekli=True)` → cümlelere bölüp her
+  biri için `Sonuc` listesi. `surekli=False` paragraf içi ton sürekliliğini kapatır.
+- `Sonuc` alanları: `cumle`, `eylem`, `ipucu` (eylemi tetikleyen sözcükler), `stil`, `yogunluk`, `gerekce`,
+  `duygular` (model varsa 8 Plutchik duygusunun olasılığı, yoksa boş).
+- `Cozumleyici(model_klasoru=None, model=None, stiller=STILLER, ayar=None)`:
+  `model=False` yalnız kurallar, `model=True` model zorunlu (yoksa hata), `None` varsa yükler;
+  `stiller` seslendirecek sesin sahip olduğu stiller (olmayanlar en yakınına düşer);
+  `ayar` `stil.VARSAYILAN_AYAR` eşiklerini ezer (`duyarlilik`, `baskin`, `stil_esik`, `stil_baskin`).
+- `eylem(cumle)` yalnız konuşma eylemini, `cumlelere_bol(metin)` yalnız bölmeyi verir.
+  [turkce-normalize](https://github.com/seslen-tr/turkce-normalize) kuruluysa onun cümle bölücüsü
+  kullanılır (seslendirmeyle aynı bölme); yoksa paketin basit bölücüsü.
+
+```python
+from turkce_duygu import Cozumleyici
+
+c = Cozumleyici(model=False, stiller=("notr", "neseli", "uyari", "merak", "ozur"))
+c.cozumle("Dikkat, zemin ıslak!").stil          # 'uyari' (yoğunluk 0.95)
 ```
 
 ## Neden
@@ -130,18 +155,41 @@ pip install turkce-duygu[model]
 ```
 
 Model dosyaları (duygu.onnx, tokenizer.json, esikler.json; ~445 MB) Hugging Face'te yayımlanır ve ilk
-kullanımda kendiliğinden iner (önbellekte kalır). `TURKCE_DUYGU_MODEL` ortam değişkeniyle yerel klasör gösterilir. Model yoksa paket yalnız kurallarla
-çalışır.
+kullanımda kendiliğinden iner (önbellekte kalır). Model yoksa paket yalnız kurallarla çalışır.
 
-**Yeniden eğitmek** (GPU gerekmez, işlemcide yaklaşık bir saat):
+Model klasörü şu sırayla aranır: `Cozumleyici(model_klasoru=...)`, `TURKCE_DUYGU_MODEL` ortam değişkeni,
+paketin yanındaki `model/`, depo kökündeki `model/onnx/`, en son Hugging Face deposu (varsayılan
+`seslen-tr/turkce-duygu`, `TURKCE_DUYGU_HF` ile değişir). İndirmeyi kapatmak için
+`TURKCE_DUYGU_INDIRME=0` ya da `HF_HUB_OFFLINE=1`.
+
+**Yeniden eğitmek** (GPU gerekmez ama işlemcide uzun sürer: geliştirici makinesinde `egit.py` 4 turda
+yaklaşık 2,5 saat, `egit_stil.py` tur başına bir saatten fazla):
 ```
 pip install turkce-duygu[egitim]
-python egit/veri.py        # XED (sabit sürüm) + Vikipedi nötr örnekleri, MD5'e göre bölme
+python egit/veri.py        # XED (sabit sürüm) + Vikipedi ve Common Voice nötr örnekleri, MD5'e göre bölme
 python egit/egit.py        # BERTurk ince ayar; en iyi tur doğrulama makro-F1'ine göre
 python egit/aktar.py       # ONNX + eşdeğerlik kapısı (int8 kapıyı geçmezse fp32)
-python egit/egit_stil.py   # stil çıkışını ekler (iki çıkışlı ONNX)
-python degerlendirme/olc.py
+python egit/egit_stil.py   # stil çıkışını ekler (iki çıkışlı ONNX); "aktar" bağımsız değişkeniyle yalnız aktarım
+python degerlendirme/olc.py   # XED sınavı ve nötr ayrımı → degerlendirme/sonuc.json
 ```
+
+Ton havuzlarıyla yapılan ölçümler (`degerlendirme/stil_ayar.py`, `stil_havuz.py`, `sizinti_temizle.py`,
+`havuz.py`) yayımlanmayan Seslen havuzlarını ister; klasör `TURKCE_DUYGU_HAVUZ` ile gösterilir
+(varsayılan `veri/havuz`).
+
+## Düzen
+
+| Yol | İçerik |
+|---|---|
+| `turkce_duygu/eylem.py` | kurallı konuşma eylemi (soru, rica, emir, uyarı, özür, ünlem…) |
+| `turkce_duygu/stil.py` | eylem + duygu/stil olasılıkları → stil ve yoğunluk, paragraf sürekliliği |
+| `turkce_duygu/model.py` | ONNX modelini bulur, indirir, çalıştırır |
+| `turkce_duygu/__init__.py`, `__main__.py` | `Cozumleyici`, `cozumle`, `metin_cozumle`, komut satırı |
+| `turkce_duygu/veri/` | `fiiller.txt` (eylem gövdeleri), `unlemler.tsv`, `stil_seti/` (8 ton, 908 cümle) |
+| `egit/` | veri hazırlama, ince ayar, ONNX aktarımı, stil çıkışı eğitimi |
+| `degerlendirme/` | ölçüm betikleri ve `sonuc.json` |
+| `hf/` | Hugging Face model kartı (`README.md`) ve yükleme betiği (`yukle.py`, varsayılan gizli depo) |
+| `tests/` | kural testleri (`eylem_literatur.tsv`: kaynaklardaki numaralı örnekler) ve stil testleri |
 
 ## Sınırlar
 
@@ -170,4 +218,4 @@ yardımıyla yazıldı (sentetik), gerçek kişilere ya da yayımlanmış metinl
 Öhman vd. 2020). `turkce_duygu/veri/fiiller.txt` Vikisözlük türevidir (CC BY-SA 4.0).
 
 Kardeş projeler: [turkce-vurgu](https://github.com/seslen-tr/turkce-vurgu) (vurgulu okunuş), [turkce-normalize](https://github.com/seslen-tr/turkce-normalize)
-(metin hazırlama), [turkce-plbert](https://github.com/seslen-tr/turkce-plbert), [turkce-tts-sinav](https://github.com/seslen-tr/turkce-tts-sinav).
+(metin hazırlama), [turkce-uslup](https://github.com/seslen-tr/turkce-uslup) (metin üslubu ve okuma ayarı), [turkce-plbert](https://github.com/seslen-tr/turkce-plbert), [turkce-tts-sinav](https://github.com/seslen-tr/turkce-tts-sinav).

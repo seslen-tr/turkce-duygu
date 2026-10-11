@@ -32,11 +32,16 @@ for r in metin_cozumle("Eyvah, anahtarı evde unuttum. Kapıyı açabilir misini
 
 ## Ölçüler (ayrılmış sınav kümesi)
 
+XED Türkçe sınav kümesi, 904 cümle; eğitimde ve eşik seçiminde kullanılmadı.
+
 | | Makro-F1 (8 duygu) | İlk tahmin doğru |
 |---|---|---|
 | Sınıf sıklığı tabanı | 0,225 | %20,2 |
 | TF-IDF + lojistik regresyon | 0,289 | %28,8 |
 | **Bu model** | **0,327** | **%35,8** |
+
+Nötr ayrımı: nötr sınav cümlelerinin (Vikipedi + Common Voice) %95,1'i nötr, XED sınav cümlelerinin %98,2'si
+duygulu bulunur (kaynak farkı bu oranı kısmen şişirir).
 
 Seslendirme stili (kurallar + bu model, 8 ton): toplam **%85,6** (yalnız duygu eşlemesiyle %63,8).
 Ayrıntı ve sınırlılıklar: paketin README'si.
