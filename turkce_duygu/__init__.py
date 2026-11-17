@@ -19,7 +19,7 @@ from .eylem import Eylem, eylem
 from .stil import STILLER, Stil, stil_sec, yumusat
 
 __all__ = ["Cozumleyici", "Sonuc", "cozumle", "metin_cozumle", "eylem", "cumlelere_bol", "STILLER"]
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 
 @dataclass

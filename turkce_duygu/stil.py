@@ -40,6 +40,19 @@ EYLEM_STIL = {"ozur": ("ozur", 0.7), "uyari": ("uyari", 0.8), "yasak": ("uyari",
 #   stil_baskin: biçimi ezen stil başlığı olasılığı (kızgın / üzgün)
 VARSAYILAN_AYAR = {"duyarlilik": 1.0, "baskin": float("inf"), "stil_esik": 0.3, "stil_baskin": 0.6}
 _PEKISTIRME = re.compile(r"\b(?:çok|mutlaka|kesinlikle|asla|hemen|derhal|sakın|gerçekten|son\s+derece|inanılmaz\w*)\b")
+# 18.11.2026 (gerçek cümlelerle deneme): model kısa yanıta duygu uyduruyordu ("Tamam." neşeli 0,85, "Evet." kızgın
+# 0,85), değillenen olumsuz duyguyu duygu sanıyordu ("Çok üzgün değilim." üzgün 0,80), düz emir (tarif, kılavuz:
+# "Önce fırını ısıtın.") uyarı oluyordu. Ünlemsiz kısa yanıt, değillenen olumsuz duygu ve pekiştirmesiz, tehlike sözü
+# geçmeyen, modelin uyarı görmediği düz emir nötr (havuz sınavı: toplam %85,6 aynı, uyarı 332 → 331 / 350; tarif ve kılavuz nötr).
+_KISA_YANIT = {"tamam", "evet", "hayır", "peki", "olur", "tabii", "tabi", "elbette", "anladım", "anlaşıldı", "doğru",
+               "haklısın", "haklısınız", "teşekkürler", "teşekkür ederim", "sağ ol", "sağ olun", "sağol",
+               "rica ederim", "merhaba", "selam", "günaydın", "iyi akşamlar", "iyi geceler", "hoşça kal",
+               "görüşürüz", "tamam o zaman", "evet evet", "hayır hayır", "belki", "bilmiyorum", "anlıyorum"}
+# Emri uyarı yapan sözler (model görmese de): "dikkatle oku", "elini yakarsın", "uzak durun"
+_TEHLIKE = re.compile(r"\b(?:dikkat\w*|tehlik\w*|yakar\w*|zarar\w*|uzak\s+(?:dur|tut)\w*|kaçın\w*|acil\w*|"
+                      r"risk\w*|güvenli\w*|kaza\w*|yaralan\w*|zehir\w*|kayg[ıa]n\w*|düşer\w*|çarpar\w*)")
+_DEGIL_OLUMSUZ = re.compile(r"\b(?:üzgün|kızgın|sinirli|öfkeli|kötü|fena|mutsuz|kırgın|endişeli|korkmuş|kızmış|"
+                            r"üzülmüş|kızıyor|üzülüyor|sorun|dert)\w*\s+(?:hiç\s+)?değil")
 
 
 @dataclass
@@ -76,6 +89,14 @@ def _stil_sec(cumle: str, e: Eylem, guc: dict[str, float] | None, baskin: float 
               so: dict[str, float] | None = None, stil_esik: float = 0.3, stil_baskin: float = 0.6) -> Stil:
     if _FISILTI.search(kucuk(cumle)):
         return Stil("fisilti", 0.6, "fısıltı sözü")
+    k = kucuk(cumle)
+    if " ".join(re.sub(r"[^\w\s]", " ", k).split()) in _KISA_YANIT:     # ünlemliyse hafif heyecan ("Evet!")
+        return Stil("heyecan", 0.4, "kısa yanıt + ünlem") if "!" in cumle else Stil("notr", 0.0, "kısa yanıt")
+    if _DEGIL_OLUMSUZ.search(k):
+        return Stil("notr", 0.0, "değillenen olumsuz duygu")
+    if (e.tur == "emir" and "!" not in cumle and not _PEKISTIRME.search(k) and not _TEHLIKE.search(k)
+            and (so is None or (so.get("uyari", 0.0) < stil_esik and max(so, key=so.get) != "kizgin"))):
+        return Stil("notr", 0.0, f"düz emir ({', '.join(e.ipucu)})")
     if so and e.tur in ("soru", "danisma", "emir", "yasak", "uyari", "unlem"):
         s = max(("kizgin", "uzgun"), key=lambda x: so.get(x, 0.0))
         if so.get(s, 0.0) >= stil_baskin and (s == "kizgin" or e.tur in ("soru", "danisma")):

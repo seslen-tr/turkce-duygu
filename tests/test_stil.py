@@ -30,3 +30,13 @@ def test_pekistirme():
 def test_cumle_bolme():
     assert cumlelere_bol("Dr. Ayşe geldi. Saat 3.30'da başladık! Sonra? Bitti.") == [
         "Dr. Ayşe geldi.", "Saat 3.30'da başladık!", "Sonra?", "Bitti."]
+
+
+def test_kisa_yanit_degilleme_duz_emir():
+    # 18.11.2026: model "Tamam." neşeli, "Evet." kızgın, "Çok üzgün değilim." üzgün okutuyordu; tarif uyarı oluyordu
+    for c in ("Tamam.", "Evet.", "Peki.", "Teşekkür ederim.", "Çok üzgün değilim.", "Kötü değildi.",
+              "Önce fırını ısıtın.", "Ayarlar menüsünü açın."):
+        assert stil(c) == ("notr", 0.0), c
+    assert stil("Evet!")[0] == "heyecan"
+    assert stil("Tepsiyi eldivensiz tutma, elini yakarsın.")[0] == "uyari"     # tehlike sözü: uyarı kalır
+    assert stil("Hemen buraya gel!")[0] == "uyari"                             # ünlem + pekiştirme

@@ -1,5 +1,15 @@
 # Değişiklikler
 
+## 0.1.2 — kısa yanıt, değilleme, düz emir
+
+- Ünlemsiz kısa yanıt nötr: "Tamam.", "Evet.", "Peki.", "Hayır.", "Teşekkür ederim." (model "Tamam."ı neşeli 0,85,
+  "Evet."i kızgın 0,85 okutuyordu); ünlemliyse hafif heyecan ("Evet!").
+- Değillenen olumsuz duygu nötr: "Çok üzgün değilim.", "Kötü değildi." (önceden üzgün 0,80 / neşeli). Olumlu
+  duygunun değillenmesi değişmedi ("Hiç mutlu değilim." üzgün).
+- Düz emir nötr: tarif ve kılavuz ("Önce fırını ısıtın.", "Ayarlar menüsünü açın.") uyarı oluyordu. Ünlem,
+  pekiştirme ("hemen", "sakın"), tehlike sözü ("dikkatle", "yakarsın", "uzak durun") varsa ya da model uyarı
+  görüyorsa uyarı kalır. Havuz sınavı (2209 cümle): %85,6 aynı.
+
 ## 0.1.1 — belgeler
 
 - README ve CHANGELOG koda göre güncellendi (kurulum, kullanım, API, düzen); kod davranışı değişmedi.
