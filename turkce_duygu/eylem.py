@@ -172,7 +172,7 @@ _SAKIN = re.compile(r"(?:^|[,;:!.]\s*)(?:sakın|aman)\b")
 _ASLA = re.compile(r"\b(?:asla|sakın|kesinlikle|hiçbir\s+şekilde)\b")
 # Tehlike bildiren sözcükler: buyrukla ya da bir eylem adıyla (-mAk) birlikte uyarıdır; tek başına haber olabilir.
 _TEHLIKE = re.compile(r"\b(?:tehlike\w*|risk\w*|kaygan|buzlanma|zehirli|yanıcı|patlayıcı|yüksek\s+gerilim|"
-                      r"kaza\w*|yaralan\w*|çökme\w*|yangın\w*|zarar\w*|güvenliğ\w*|ceza\w*|yasak\w*|uyarı\w*|alarm\w*)\b")
+                      r"kaza(?!n)\w*|yaralan\w*|çökme\w*|yangın\w*|zarar\w*|güvenliğ\w*|ceza\w*|yasak\w*|uyarı\w*|alarm\w*)\b")
 # Olası kötü sonuç (G&K §21.4.2.1 olasılık): buyrukla birlikte "…atma, yangın çıkabilir"; "aksi halde", "yoksa".
 _SONUC = re.compile(r"\w+[ae]bil(?:ir|irsin|irsiniz|irler)\b|\b(?:aksi\s+(?:halde|takdirde)|yoksa)\b")
 _EYLEM_ADI = re.compile(r"\w{2,}m[ae]k\b|\w{2,}m[ae]s[ıi]\b")
@@ -230,7 +230,8 @@ def eylem(cumle: str) -> Eylem:
     if m and not (soru and m.group(0).startswith(("affeders", "pardon"))):
         return Eylem("ozur", [m.group(0)], unlem)
 
-    kip = yuklem_kipi(son)
+    # "var" (varmak'ın emri) bugün yalnız varlık bildirir: "karanlıkta biri var" emir değil
+    kip = "" if son == "var" else yuklem_kipi(son)
     if kip == "yasak" and len(son) <= 4 and not (k.endswith("!") or _ASLA.search(k)):
         kip = ""                                                   # "aşma", "atma" ad da olabilir
     yan = [x for x in (yuklem_kipi(s) for s in _yan_cumle_sonlari(k)[:-1]) if x]

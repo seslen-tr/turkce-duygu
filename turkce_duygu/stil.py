@@ -3,7 +3,8 @@
 KONUŞMA STİLİ — konuşma eylemi + duygu olasılıkları → seslendirme stili ve yoğunluğu.
 
 Stiller: nötr, neşeli, heyecan, uyarı, merak, özür, üzgün, kızgın, fısıltı. Fısıltı metinden seçilmez
-(anlatıcı/stüdyo kararı); yalnız "fısıldadı" gibi açık söz geçerse önerilir. Sesin bir stili yoksa
+(anlatıcı/stüdyo kararı); yalnız "fısıldadı" gibi açık söz ya da ünlemsiz sessizlik isteği ("Sessiz ol, bebek
+uyuyor.", "Şşş.") geçerse önerilir. Sesin bir stili yoksa
 YEDEK'teki en yakın stile düşülür (ör. üzgün → özür).
 Önce biçim karar verir (soru → merak, özür kalıbı → özür, uyarı → uyarı; G&K ve H03'e dayanan
 eylem.py), biçimin söylemediği yerde model: iki çıkışlı modelde stil başlığı (stil olasılıkları),
@@ -50,7 +51,16 @@ _KISA_YANIT = {"tamam", "evet", "hayır", "peki", "olur", "tabii", "tabi", "elbe
                "görüşürüz", "tamam o zaman", "evet evet", "hayır hayır", "belki", "bilmiyorum", "anlıyorum"}
 # Emri uyarı yapan sözler (model görmese de): "dikkatle oku", "elini yakarsın", "uzak durun"
 _TEHLIKE = re.compile(r"\b(?:dikkat\w*|tehlik\w*|yakar\w*|zarar\w*|uzak\s+(?:dur|tut)\w*|kaçın\w*|acil\w*|"
-                      r"risk\w*|güvenli\w*|kaza\w*|yaralan\w*|zehir\w*|kayg[ıa]n\w*|düşer\w*|çarpar\w*)")
+                      r"risk\w*|güvenli\w*|kaza(?!n)\w*|yaralan\w*|zehir\w*|kayg[ıa]n\w*|düşer\w*|çarpar\w*)")
+# 19.11.2026: model kovmayı neşeli ("Bırakın beni!" 0,79), sessizlik isteğini kızgın ("Sessiz ol, bebek uyuyor."
+# 0,80) görüyor; "lütfen" + olumsuz emir yalvarmadır, uyarı değil ("Lütfen gitme." uyarıydı).
+_KOVMA = re.compile(r"\b(?:bırak(?:ın|ınız)?\s+beni|beni\s+rahat\s+bırak\w*|rahat\s+bırak(?:ın|ınız)?\s+beni|"
+                    r"çek\s+elini|çekil\s+(?:önümden|git|şuradan|başımdan)|defol\w*|kaybol\s+(?:git|gözümün)\w*|"
+                    r"bana\s+dokunma\w*|dokunma\s+bana|git\s+başımdan|yeter\s+artık)\b")
+_SESSIZLIK = re.compile(r"(?:^|[\s,])şş+t?\b|\b(?:sessiz\s+ol\w*|yavaş\s+konuş\w*|alçak\s+sesle|sesini\s+alçalt\w*|"
+                        r"uyandırma\w*|gürültü\s+yapma\w*|ses\s+çıkarma\w*)")
+_YALVARMA = re.compile(r"\b(?:beni|bana|gitme\w*|bırakma\w*|kızma\w*|ağlama\w*|üzülme\w*|darılma\w*|küsme\w*|"
+                       r"yapma\w*|söyleme\w*|ölme\w*|vazgeçme\w*)\b")
 _DEGIL_OLUMSUZ = re.compile(r"\b(?:üzgün|kızgın|sinirli|öfkeli|kötü|fena|mutsuz|kırgın|endişeli|korkmuş|kızmış|"
                             r"üzülmüş|kızıyor|üzülüyor|sorun|dert)\w*\s+(?:hiç\s+)?değil")
 
@@ -94,6 +104,20 @@ def _stil_sec(cumle: str, e: Eylem, guc: dict[str, float] | None, baskin: float 
         return Stil("heyecan", 0.4, "kısa yanıt + ünlem") if "!" in cumle else Stil("notr", 0.0, "kısa yanıt")
     if _DEGIL_OLUMSUZ.search(k):
         return Stil("notr", 0.0, "değillenen olumsuz duygu")
+    if cumle.rstrip().endswith(":") and e.tur in ("bildirim", "emir"):
+        return Stil("notr", 0.0, "liste / açıklama girişi (:)")   # "Bunun üç yararı var:" neşeli okunuyordu
+    lutfen =re.search(r"\blütfen\b", k)
+    if (m := _KOVMA.search(k)):
+        if lutfen:
+            return Stil("uzgun", _pekistir(cumle, 0.5), f"lütfen + kovma ({m.group(0)})")
+        taban = max(0.5, float(np.clip(0.4 + ((so or {}).get("kizgin", 0.0) - stil_baskin), 0.4, 0.9)))
+        return Stil("kizgin", _pekistir(cumle, taban), f"kovma ({m.group(0)})")   # model güçlüyse onun yoğunluğu
+    if (m := _SESSIZLIK.search(k)) and "!" not in cumle:
+        return Stil("fisilti", 0.5, f"sessizlik isteği ({m.group(0).strip(' ,')})")
+    if e.tur == "yasak" and lutfen and not _TEHLIKE.search(k) and "!" not in cumle:
+        if (m := _YALVARMA.search(k)):
+            return Stil("uzgun", _pekistir(cumle, 0.4), f"lütfen + olumsuz emir: yalvarma ({m.group(0)})")
+        return Stil("notr", 0.0, "lütfen + olumsuz emir: rica")
     if (e.tur == "emir" and "!" not in cumle and not _PEKISTIRME.search(k) and not _TEHLIKE.search(k)
             and (so is None or (so.get("uyari", 0.0) < stil_esik and max(so, key=so.get) != "kizgin"))):
         return Stil("notr", 0.0, f"düz emir ({', '.join(e.ipucu)})")

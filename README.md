@@ -91,7 +91,7 @@ emir → hafif uyarı, rica → nötr. Biçimin söylemediği yerde modelin stil
 çıkışı yoksa (eski tek çıkışlı model) duygu eşlemesi kullanılır: sevinç/güven → neşeli,
 şaşkınlık/beklenti → heyecan, korku → uyarı, öfke/tiksinti → kızgın, üzüntü → üzgün. Hiçbir duygu
 eşiği geçmezse nötr. Çok güçlü öfke ya da üzüntü biçimi ezer: "Kaç kere söyleyeceğim sana, kapıyı
-kapat!" emir biçimindedir ama kızgın okunur. Fısıltı metinden seçilmez; yalnız "fısıldadı" gibi açık bir söz geçerse önerilir. Sesin bir
+kapat!" emir biçimindedir ama kızgın okunur. Fısıltı metinden seçilmez; yalnız "fısıldadı" gibi açık bir söz ya da ünlemsiz sessizlik isteği ("Sessiz ol, bebek uyuyor.") geçerse önerilir. Sesin bir
 stili yoksa en yakınına düşülür (üzgün → özür, kızgın → uyarı). Ünlem işareti ve pekiştirme sözcükleri (çok, mutlaka, kesinlikle, hemen) yoğunluğu
 artırır. Paragrafta, duygulu bir cümlenin ardındaki eşiğe yakın cümle tonu yarı yoğunlukla sürdürür.
 Eşleme tablo hâlinde durur, değiştirilebilir.
